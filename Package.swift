@@ -6,7 +6,7 @@ let package = Package(
   name: "swift-composable-architecture",
   platforms: [
     .iOS(.v13),
-    .macOS(.v10_15),
+    .macOS("12"),
     .tvOS(.v13),
     .watchOS(.v6),
   ],

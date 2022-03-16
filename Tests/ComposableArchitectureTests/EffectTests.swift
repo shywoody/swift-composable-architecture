@@ -2,6 +2,7 @@ import Combine
 import XCTest
 
 @testable import ComposableArchitecture
+//import XCTestDynamicOverlay
 
 final class EffectTests: XCTestCase {
   var cancellables: Set<AnyCancellable> = []
@@ -279,4 +280,49 @@ final class EffectTests: XCTestCase {
       _ = XCTWaiter.wait(for: [.init()], timeout: 1.1)
     }
   #endif
+
+
+  func testEffectTask() {
+    struct State: Equatable {
+      var value: Int
+    }
+    enum Action {
+      case buttonTapped
+      case response(Int)
+    }
+    struct Environment {
+    }
+
+    let reducer = Reducer<State, Action, Environment> { state, action, environment in
+      switch action {
+      case .buttonTapped:
+        state.value = 0
+
+        return .task {
+          do {
+            let (data, _) = try await URLSession.shared.data(
+              from: .init(string: "https://www.random.org/integers/?num=1&min=1&max=100&col=1&base=10&format=plain")!
+            )
+            return .response(Int(String(decoding: data, as: UTF8.self).trimmingCharacters(in: .newlines)) ?? 0)
+          } catch {
+            return .response(0)
+          }
+        }
+        .receive(on: DispatchQueue.main)
+        .eraseToEffect()
+
+      case let .response(int):
+        state.value = int
+        return .none
+      }
+    }
+
+    let store = TestStore(
+      initialState: .init(value: 1),
+      reducer: reducer,
+      environment: .init()
+    )
+
+    store.send(.buttonTapped)
+  }
 }
