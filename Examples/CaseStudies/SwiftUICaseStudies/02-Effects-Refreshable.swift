@@ -97,9 +97,9 @@ let refreshableReducer = Reducer<
             }
           }
         }
-        .refreshable {
-          await viewStore.send(.refresh, while: \.isLoading)
-        }
+//        .refreshable {
+//          await viewStore.send(.refresh, while: \.isLoading)
+//        }
       }
     }
   }
